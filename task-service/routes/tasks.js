@@ -4,7 +4,7 @@ const Task = require('../models/task');
 const axios = require('axios');
 require('dotenv').config();
 
-// 🔍 Verifica si un usuario existe vía user-service
+// Verifica si el usuario existe consultando el microservicio de usuarios
 const userExists = async (userId) => {
   try {
     const res = await axios.get(`${process.env.USER_SERVICE_URL}/${userId}`);
@@ -14,12 +14,12 @@ const userExists = async (userId) => {
   }
 };
 
-// ✅ GET /health
+// Health
 router.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// ✅ GET /tasks
+// Obtener tareas (todas o por usuario)
 router.get('/', async (req, res, next) => {
   try {
     const userId = req.query.user_id;
@@ -31,7 +31,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// ✅ GET /tasks/:id
+// Obtener tarea por ID
 router.get('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
@@ -46,7 +46,7 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// ✅ POST /tasks
+// Crear tarea
 router.post('/', async (req, res, next) => {
   try {
     const { title, description, userId } = req.body;
@@ -65,7 +65,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// ✅ PUT /tasks/:id (actualizar estado)
+// Actualizar tarea
 router.put('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);

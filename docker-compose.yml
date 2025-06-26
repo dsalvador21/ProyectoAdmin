@@ -81,7 +81,13 @@ services:
       - ./data/letsencrypt:/etc/letsencrypt
     networks:
       - app-network
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:81"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      
 networks:
   app-network:
 

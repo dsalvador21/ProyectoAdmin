@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 
-// Ruta específica debe ir primero
+// Health
 router.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Obtener usuarios
 router.get('/', async (req, res, next) => {
   try {
     const users = await User.findAll();
@@ -16,6 +17,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// Obtener usuario por ID
 router.get('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
@@ -29,6 +31,7 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
+// Crear usuario
 router.post('/', async (req, res, next) => {
   try {
     const user = await User.create(req.body);
