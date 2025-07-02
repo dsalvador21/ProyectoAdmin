@@ -7,9 +7,12 @@ require('dotenv').config();
 app.use(express.json());
 app.use('/tasks', taskRoutes);
 
+const { error } = require('./utils/responses');
 app.use((err, req, res, next) => {
-  console.error("Error no capturado:", err);
-  res.status(500).json({ error: 'Error interno del servidor' });
+  console.error('Error no controlado:', err);
+  const status = err.status || 500;
+  const message = err.message || 'Error interno del servidor';
+  error(res, status, message);
 });
 
 const PORT = process.env.PORT || 3000;

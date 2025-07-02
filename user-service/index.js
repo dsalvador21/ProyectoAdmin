@@ -7,10 +7,12 @@ require('dotenv').config();
 app.use(express.json());
 app.use('/users', userRoutes);
 
-// Captura de errores no manejados
+const { error } = require('./utils/responses');
 app.use((err, req, res, next) => {
   console.error("Error no capturado:", err);
-  res.status(500).json({ error: 'Error interno del servidor' });
+  const status = err.status || 500;
+  const message = err.message || 'Error interno del servidor';
+  error(res, status, message);
 });
 
 const PORT = process.env.PORT || 3000;

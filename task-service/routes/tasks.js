@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Task = require('../models/task');
 const axios = require('axios');
+const { success, error } = require('../utils/responses'); 
 require('dotenv').config();
 
 // Verifica si el usuario existe consultando el microservicio de usuarios
@@ -16,7 +17,7 @@ const userExists = async (userId) => {
 
 // Health
 router.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  return success(res, { status: 'ok' });
 });
 
 // Obtener tareas (todas o por usuario)
@@ -25,7 +26,7 @@ router.get('/', async (req, res, next) => {
     const userId = req.query.user_id;
     const where = userId ? { userId } : undefined;
     const tasks = await Task.findAll({ where });
-    res.json(tasks);
+    return success(res, tasks);
   } catch (err) {
     next(err);
   }
@@ -33,14 +34,13 @@ router.get('/', async (req, res, next) => {
 
 // Obtener tarea por ID
 router.get('/:id', async (req, res, next) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return error(res, 400, "ID inválido");
+
   try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ error: "ID inválido" });
-
     const task = await Task.findByPk(id);
-    if (!task) return res.status(404).json({ error: "Tarea no encontrada" });
-
-    res.json(task);
+    if (!task) return error(res, 404, "Tarea no encontrada");
+    return success(res, task);
   } catch (err) {
     next(err);
   }
@@ -48,18 +48,18 @@ router.get('/:id', async (req, res, next) => {
 
 // Crear tarea
 router.post('/', async (req, res, next) => {
+  const { title, description, userId } = req.body;
+
+  if (!title || !userId) {
+    return error(res, 422, "Faltan campos requeridos", { required: ['title', 'userId'] });
+  }
+
   try {
-    const { title, description, userId } = req.body;
-
-    if (!title || !userId) {
-      return res.status(400).json({ error: "Título y userId son obligatorios" });
-    }
-
     const exists = await userExists(userId);
-    if (!exists) return res.status(404).json({ error: "Usuario no existe" });
+    if (!exists) return error(res, 404, "Usuario no existe");
 
     const task = await Task.create({ title, description, userId });
-    res.status(201).json(task);
+    return success(res, task, 201, "Tarea creada");
   } catch (err) {
     next(err);
   }
@@ -67,20 +67,23 @@ router.post('/', async (req, res, next) => {
 
 // Actualizar tarea
 router.put('/:id', async (req, res, next) => {
+  const id = parseInt(req.params.id);
+  const { status } = req.body;
+
+  if (isNaN(id)) return error(res, 400, "ID inválido");
+
+  if (!['pendiente', 'en progreso', 'completada'].includes(status)) {
+    return error(res, 400, "Estado inválido. Debe ser: pendiente, en progreso o completada");
+  }
+
   try {
-    const id = parseInt(req.params.id);
-    const { status } = req.body;
-
-    if (!['pendiente', 'en progreso', 'completada'].includes(status)) {
-      return res.status(400).json({ error: "Estado inválido" });
-    }
-
     const task = await Task.findByPk(id);
-    if (!task) return res.status(404).json({ error: "Tarea no encontrada" });
+    if (!task) return error(res, 404, "Tarea no encontrada");
 
     task.status = status;
     await task.save();
-    res.json(task);
+
+    return success(res, task, 200, "Estado actualizado");
   } catch (err) {
     next(err);
   }
