@@ -2,14 +2,17 @@ version: "3.8"
 
 services:
   user-service:
-    build: ./user-service
-    container_name: user-service
+    image: user-service:latest
     environment:
       - DATABASE_URL=postgres://user:password@db-users:5432/usersdb
     depends_on:
       - db-users
     networks:
       - app-network
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/users/health"]
       interval: 10s
@@ -18,8 +21,7 @@ services:
       start_period: 5s
 
   task-service:
-    build: ./task-service
-    container_name: task-service
+    image: task-service:latest
     environment:
       - DATABASE_URL=postgres://user:password@db-tasks:5432/tasksdb
       - USER_SERVICE_URL=http://user-service:3000/users
@@ -28,6 +30,10 @@ services:
       - user-service
     networks:
       - app-network
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/tasks/health"]
       interval: 10s
@@ -71,7 +77,6 @@ services:
 
   npm:
     image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy-manager
     ports:
       - "80:80"
       - "443:443"
@@ -79,6 +84,7 @@ services:
     volumes:
       - ./data/npm:/data
       - ./data/letsencrypt:/etc/letsencrypt
+      - ./nginx-custom.conf:/etc/nginx/nginx.conf
     networks:
       - app-network
     healthcheck:
@@ -87,10 +93,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-      
+
 networks:
   app-network:
 
 volumes:
   db_users_data:
   db_tasks_data:
+
