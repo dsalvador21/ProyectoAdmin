@@ -114,4 +114,3 @@ docker stack rm proyecto
 
 **Diego Salvador**  
 Ingeniería Civil en Computación – Universidad de Talca  
-diegosalvador01032003@alumnos.utalca.cl
