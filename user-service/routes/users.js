@@ -11,6 +11,8 @@ router.get('/health', (req, res) => {
 // Obtener todos los usuarios
 router.get('/', async (req, res, next) => {
   try {
+    console.log(`[${new Date().toISOString()}] /users llamado desde contenedor: ${process.env.HOSTNAME}`);
+
     const users = await User.findAll();
     return success(res, users);
   } catch (err) {
